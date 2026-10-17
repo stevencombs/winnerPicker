@@ -55,26 +55,6 @@ extension View {
     }
 }
 
-/// Hard text shadow drawn as extra glyphs, not a view-wide shadow filter.
-struct GlyphShadow<Content: View>: View {
-    var color: Color
-    var shadows: [(color: Color, x: CGFloat, y: CGFloat)]
-    @ViewBuilder var content: () -> Content
-
-    var body: some View {
-        ZStack {
-            ForEach(0..<shadows.count, id: \.self) { index in
-                content()
-                    .foregroundStyle(shadows[index].color)
-                    .offset(x: shadows[index].x, y: shadows[index].y)
-                    .allowsHitTesting(false)
-            }
-            content()
-                .foregroundStyle(color)
-        }
-    }
-}
-
 struct StripeBackground: View {
     var body: some View {
         Canvas { context, size in
@@ -238,21 +218,16 @@ struct StreamHeader: View {
             .frame(width: 124, height: 124, alignment: .topLeading)
 
             VStack(alignment: .leading, spacing: 10) {
-                GlyphShadow(
-                    color: Theme.beige,
-                    shadows: [(color: Theme.orange, x: 8, y: 8), (color: Theme.outline, x: 4, y: 4)]
-                ) {
-                    Text("WINNERPICKER")
-                        .font(Theme.press(42))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                }
-                GlyphShadow(color: Theme.cream, shadows: [(color: Theme.outline, x: 3, y: 3)]) {
-                    Text("retroCombs MEMBERS GIVEAWAY  •  THE MODERN 8-BIT USER'S GROUP")
-                        .font(Theme.mono(32))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                }
+                Text("WINNERPICKER")
+                    .font(Theme.press(42))
+                    .foregroundStyle(Theme.beige)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                Text("retroCombs MEMBERS GIVEAWAY  •  THE MODERN 8-BIT USER'S GROUP")
+                    .font(Theme.mono(32))
+                    .foregroundStyle(Theme.cream)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
             }
             Spacer(minLength: 12)
             LiveBadge()

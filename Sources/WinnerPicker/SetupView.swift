@@ -72,17 +72,12 @@ struct SetupView: View {
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.outline, lineWidth: 4))
                 .hardShadow(Theme.red, x: 4, y: 4, radius: 10)
             VStack(alignment: .leading, spacing: 6) {
-                GlyphShadow(
-                    color: Theme.beige,
-                    shadows: [(color: Theme.orange, x: 6, y: 6), (color: Theme.outline, x: 3, y: 3)]
-                ) {
-                    Text("WINNERPICKER")
-                        .font(Theme.press(22))
-                }
-                GlyphShadow(color: Theme.cream, shadows: [(color: Theme.outline, x: 2, y: 2)]) {
-                    Text("Operator setup  •  this screen stays off air")
-                        .font(Theme.mono(28))
-                }
+                Text("WINNERPICKER")
+                    .font(Theme.press(22))
+                    .foregroundStyle(Theme.beige)
+                Text("Operator setup  •  this screen stays off air")
+                    .font(Theme.mono(28))
+                    .foregroundStyle(Theme.cream)
             }
             Spacer()
         }
@@ -90,10 +85,9 @@ struct SetupView: View {
 
     private var namesBlock: some View {
         VStack(alignment: .leading, spacing: 8) {
-            GlyphShadow(color: Theme.ink, shadows: [(color: Theme.orange, x: 3, y: 3)]) {
-                Text("ENTRANTS")
-                    .font(Theme.press(12))
-            }
+            Text("ENTRANTS")
+                .font(Theme.press(12))
+                .foregroundStyle(Theme.ink)
             ZStack(alignment: .topLeading) {
                 if model.rawInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Text("PixelPete64, SIDChipSally, ByteBandit")
@@ -129,10 +123,9 @@ struct SetupView: View {
 
     private var winnersBlock: some View {
         VStack(alignment: .leading, spacing: 8) {
-            GlyphShadow(color: Theme.ink, shadows: [(color: Theme.orange, x: 3, y: 3)]) {
-                Text("NUMBER OF WINNERS")
-                    .font(Theme.press(12))
-            }
+            Text("NUMBER OF WINNERS")
+                .font(Theme.press(12))
+                .foregroundStyle(Theme.ink)
             HStack(spacing: 6) {
                 ForEach(1...10, id: \.self) { count in
                     Button {
@@ -155,10 +148,9 @@ struct SetupView: View {
     private var prizeBlock: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                GlyphShadow(color: Theme.ink, shadows: [(color: Theme.orange, x: 3, y: 3)]) {
-                    Text("PRIZES")
-                        .font(Theme.press(12))
-                }
+                Text("PRIZES")
+                    .font(Theme.press(12))
+                    .foregroundStyle(Theme.ink)
                 Spacer()
                 Toggle("Same prize for all", isOn: $model.samePrizeForAll)
                     .font(Theme.mono(26))
@@ -202,10 +194,9 @@ struct SetupView: View {
 
     private var timerBlock: some View {
         VStack(alignment: .leading, spacing: 8) {
-            GlyphShadow(color: Theme.ink, shadows: [(color: Theme.orange, x: 3, y: 3)]) {
-                Text("CLAIM TIMER")
-                    .font(Theme.press(12))
-            }
+            Text("CLAIM TIMER")
+                .font(Theme.press(12))
+                .foregroundStyle(Theme.ink)
             HStack(spacing: 18) {
                 Stepper(value: $model.claimMinutes, in: 0...30) {
                     Text("\(model.claimMinutes) min")
