@@ -115,7 +115,9 @@ Scripts/build-app.sh          Release build, icon pack, ad-hoc sign, and install
 Scripts/generate_sounds.py    Regenerates the bundled WAV files
 ```
 
-The app icon is the joystick logo on a beige rounded tile with a dark outline and an orange, yellow, green, and blue edge. `Resources/AppIcon-1024.png` is the master. On a Mac the build packs every size from 16 through 1024 with `sips` and `iconutil`, then copies `AppIcon-16.png` and `AppIcon-32.png` over the two smallest outputs so the stick and the red buttons stay solid. `Resources/AppIcon.icns` is the committed icon, including those sizes, for machines that build without `sips`. `CFBundleIconFile` is `AppIcon`.
+The app icon is the joystick logo on a beige rounded tile, with a dark outline, an orange, yellow, green, and blue edge, and a few rainbow pixel-firework bursts. `Resources/AppIcon-1024.png` is the master. On a Mac the build packs every size from 16 through 1024 with `sips` and `iconutil`, then copies `AppIcon-16.png` and `AppIcon-32.png` over the two smallest outputs so the stick, the red buttons, and the bursts stay solid. `Resources/AppIcon.icns` is the committed icon, including those sizes, for machines that build without `sips`. `CFBundleIconFile` is `AppIcon`.
+
+Setup scales to the window, so the form fits at the default size and grows to fill a full-screen display. The draw, winner, and recap screens are a 1920×1080 stage scaled to fit, letterboxed when the window is not 16:9.
 
 Press Start 2P and VT323 are OFL fonts in `Resources/`. See `Resources/Fonts-OFL.txt`. The app registers them at launch with `CTFontManagerRegisterFontsForURL`.
 

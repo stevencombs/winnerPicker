@@ -29,6 +29,7 @@ struct ContentView: View {
             }
         }
         .frame(minWidth: 1100, minHeight: 680)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut(duration: 0.28), value: model.screen)
         .onAppear {
             KeyBridge.shared.handle = { @MainActor stroke in

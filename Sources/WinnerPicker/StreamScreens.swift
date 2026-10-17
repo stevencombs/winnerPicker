@@ -104,12 +104,12 @@ struct DrawStreamView: View {
                     Text("READY")
                         .font(Theme.press(18))
                         .foregroundStyle(Theme.orange)
-                    Text("PRESS SPACE")
-                        .font(Theme.press(36))
-                        .foregroundStyle(Theme.cream)
-                        .shadow(color: Theme.red, radius: 0, x: 4, y: 4)
-                        .minimumScaleFactor(0.5)
-                        .lineLimit(1)
+                    GlyphShadow(color: Theme.cream, shadows: [(color: Theme.red, x: 4, y: 4)]) {
+                        Text("PRESS SPACE")
+                            .font(Theme.press(36))
+                            .minimumScaleFactor(0.5)
+                            .lineLimit(1)
+                    }
                 case .shuffling:
                     Text("SHUFFLING THE NAMES…")
                         .font(Theme.press(16))
@@ -123,19 +123,19 @@ struct DrawStreamView: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.4)
                     }
-                    Text(cyclingName.isEmpty ? "…" : cyclingName)
-                        .font(Theme.press(shuffleSize))
-                        .foregroundStyle(Theme.cream)
-                        .shadow(color: Theme.red, radius: 0, x: 5, y: 5)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.35)
+                    GlyphShadow(color: Theme.cream, shadows: [(color: Theme.red, x: 5, y: 5)]) {
+                        Text(cyclingName.isEmpty ? "…" : cyclingName)
+                            .font(Theme.press(shuffleSize))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.35)
+                    }
                 case .announcing:
-                    Text("AND THE WINNER IS")
-                        .font(Theme.press(28))
-                        .foregroundStyle(Theme.cream)
-                        .shadow(color: Theme.red, radius: 0, x: 4, y: 4)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
+                    GlyphShadow(color: Theme.cream, shadows: [(color: Theme.red, x: 4, y: 4)]) {
+                        Text("AND THE WINNER IS")
+                            .font(Theme.press(28))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
+                    }
                 }
             }
             .padding(.horizontal, 24)
@@ -163,7 +163,7 @@ struct DrawStreamView: View {
                     .padding(.vertical, 1)
                     .background(Theme.cream)
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.outline, lineWidth: 3))
-                    .hardShadow(Theme.outline, x: 3, y: 3)
+                    .hardShadow(Theme.outline, x: 3, y: 3, radius: 8)
             }
             if pool.count > shown.count {
                 Text("+\(pool.count - shown.count) MORE")
@@ -197,7 +197,7 @@ struct DrawStreamView: View {
                 .padding(.vertical, 4)
                 .background(Theme.cream)
                 .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.outline, lineWidth: 3))
-                .hardShadow(Theme.outline, x: 2, y: 2)
+                .hardShadow(Theme.outline, x: 2, y: 2, radius: 4)
             Text(label)
                 .font(Theme.mono(26))
                 .foregroundStyle(Theme.muted)
@@ -207,12 +207,12 @@ struct DrawStreamView: View {
     private var membersPanel: some View {
         RainbowPanel(padding: 20, fillsHeight: true) {
             VStack(spacing: 12) {
-                Text("JOIN TO ENTER\nFUTURE GIVEAWAYS")
-                    .font(Theme.press(16))
-                    .foregroundStyle(Theme.outline)
-                    .orangeHeadingShadow()
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(6)
+                GlyphShadow(color: Theme.outline, shadows: [(color: Theme.orange, x: 3, y: 3)]) {
+                    Text("JOIN TO ENTER\nFUTURE GIVEAWAYS")
+                        .font(Theme.press(16))
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(6)
+                }
                 MembershipQR(side: 210)
                 Text(Theme.joinDisplay)
                     .font(Theme.mono(28))
@@ -259,7 +259,7 @@ struct DrawStreamView: View {
         .padding(10)
         .background(Theme.cream)
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.outline, lineWidth: 4))
-        .hardShadow(Theme.outline, x: 4, y: 4)
+        .hardShadow(Theme.outline, x: 4, y: 4, radius: 14)
     }
 
     private func consumeShuffle() {
@@ -361,15 +361,17 @@ struct WinnerStreamView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
                     .padding(.top, 8)
-                Text(currentName)
-                    .font(Theme.press(nameSize))
-                    .foregroundStyle(Theme.outline)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.35)
-                    .shadow(color: Theme.orange, radius: 0, x: 6, y: 6)
-                    .shadow(color: Theme.yellow, radius: 0, x: 12, y: 12)
-                    .padding(.vertical, 8)
+                GlyphShadow(
+                    color: Theme.outline,
+                    shadows: [(color: Theme.yellow, x: 12, y: 12), (color: Theme.orange, x: 6, y: 6)]
+                ) {
+                    Text(currentName)
+                        .font(Theme.press(nameSize))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.35)
+                }
+                .padding(.vertical, 8)
                 PrizeTag(prize: currentPrize, fontSize: 36)
                     .frame(maxWidth: .infinity)
                 RuleLine(text: "US supporters only  •  overseas winners can cover shipping")
@@ -422,7 +424,7 @@ struct WinnerStreamView: View {
                     .padding(.vertical, 8)
                     .background(expired ? Theme.yellow : Theme.red)
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.outline, lineWidth: 4))
-                    .hardShadow(Theme.outline, x: 4, y: 4)
+                    .hardShadow(Theme.outline, x: 4, y: 4, radius: 8)
             }
         }
     }
@@ -442,7 +444,7 @@ struct WinnerStreamView: View {
         .frame(maxHeight: .infinity, alignment: .top)
         .background(Theme.cream)
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.outline, lineWidth: 5))
-        .hardShadow(Theme.outline, x: 7, y: 7)
+        .hardShadow(Theme.outline, x: 7, y: 7, radius: 18)
     }
 
     private func winnerRow(_ index: Int) -> some View {
@@ -476,12 +478,12 @@ struct WinnerStreamView: View {
 
     private var membershipCard: some View {
         VStack(spacing: 8) {
-            Text("MEMBERS-ONLY\nGIVEAWAYS")
-                .font(Theme.press(13))
-                .foregroundStyle(Theme.outline)
-                .multilineTextAlignment(.center)
-                .lineSpacing(4)
-                .orangeHeadingShadow()
+            GlyphShadow(color: Theme.outline, shadows: [(color: Theme.orange, x: 3, y: 3)]) {
+                Text("MEMBERS-ONLY\nGIVEAWAYS")
+                    .font(Theme.press(13))
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+            }
             MembershipQR(side: 180)
             Text("youtube.com/\n@retrocombs/join")
                 .font(Theme.mono(24))
@@ -494,7 +496,7 @@ struct WinnerStreamView: View {
         .frame(maxHeight: .infinity)
         .background(Theme.cream)
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.outline, lineWidth: 5))
-        .hardShadow(Theme.outline, x: 7, y: 7)
+        .hardShadow(Theme.outline, x: 7, y: 7, radius: 18)
     }
 }
 
@@ -549,12 +551,12 @@ struct RecapStreamView: View {
                 .font(Theme.press(14))
                 .foregroundStyle(Theme.red)
             VStack(alignment: .leading, spacing: 0) {
-                Text(name)
-                    .font(Theme.press(name.count > 16 ? 14 : 18))
-                    .foregroundStyle(Theme.outline)
-                    .orangeHeadingShadow()
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.45)
+                GlyphShadow(color: Theme.outline, shadows: [(color: Theme.orange, x: 3, y: 3)]) {
+                    Text(name)
+                        .font(Theme.press(name.count > 16 ? 14 : 18))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.45)
+                }
                 Text(prize)
                     .font(Theme.mono(28))
                     .foregroundStyle(Theme.link)

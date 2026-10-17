@@ -43,12 +43,35 @@ enum Theme {
 }
 
 extension View {
-    func hardShadow(_ color: Color = .black.opacity(0.55), x: CGFloat = 8, y: CGFloat = 8) -> some View {
-        shadow(color: color, radius: 0, x: x, y: y)
+    /// Offset copy of this view's bounds. A zero-blur `.shadow` on macOS
+    /// redraws every child control, so panel and button shadows are shapes.
+    func hardShadow(_ color: Color = .black.opacity(0.55), x: CGFloat = 8, y: CGFloat = 8, radius: CGFloat = 0) -> some View {
+        background {
+            RoundedRectangle(cornerRadius: radius)
+                .fill(color)
+                .offset(x: x, y: y)
+                .allowsHitTesting(false)
+        }
     }
+}
 
-    func orangeHeadingShadow() -> some View {
-        shadow(color: Theme.orange, radius: 0, x: 3, y: 3)
+/// Hard text shadow drawn as extra glyphs, not a view-wide shadow filter.
+struct GlyphShadow<Content: View>: View {
+    var color: Color
+    var shadows: [(color: Color, x: CGFloat, y: CGFloat)]
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        ZStack {
+            ForEach(0..<shadows.count, id: \.self) { index in
+                content()
+                    .foregroundStyle(shadows[index].color)
+                    .offset(x: shadows[index].x, y: shadows[index].y)
+                    .allowsHitTesting(false)
+            }
+            content()
+                .foregroundStyle(color)
+        }
     }
 }
 
@@ -147,7 +170,7 @@ struct PixelButton: View {
                     RoundedRectangle(cornerRadius: 14)
                         .stroke(Theme.outline, lineWidth: 4)
                 )
-                .hardShadow(Theme.outline, x: 5, y: 5)
+                .hardShadow(Theme.outline, x: 5, y: 5, radius: 14)
         }
         .buttonStyle(.plain)
     }
@@ -215,19 +238,21 @@ struct StreamHeader: View {
             .frame(width: 124, height: 124, alignment: .topLeading)
 
             VStack(alignment: .leading, spacing: 10) {
-                Text("WINNERPICKER")
-                    .font(Theme.press(42))
-                    .foregroundStyle(Theme.beige)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                    .shadow(color: Theme.outline, radius: 0, x: 4, y: 4)
-                    .shadow(color: Theme.orange, radius: 0, x: 8, y: 8)
-                Text("retroCombs MEMBERS GIVEAWAY  •  THE MODERN 8-BIT USER'S GROUP")
-                    .font(Theme.mono(32))
-                    .foregroundStyle(Theme.cream)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                    .shadow(color: Theme.outline, radius: 0, x: 3, y: 3)
+                GlyphShadow(
+                    color: Theme.beige,
+                    shadows: [(color: Theme.orange, x: 8, y: 8), (color: Theme.outline, x: 4, y: 4)]
+                ) {
+                    Text("WINNERPICKER")
+                        .font(Theme.press(42))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                }
+                GlyphShadow(color: Theme.cream, shadows: [(color: Theme.outline, x: 3, y: 3)]) {
+                    Text("retroCombs MEMBERS GIVEAWAY  •  THE MODERN 8-BIT USER'S GROUP")
+                        .font(Theme.mono(32))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                }
             }
             Spacer(minLength: 12)
             LiveBadge()
@@ -252,7 +277,7 @@ struct LiveBadge: View {
             .padding(.vertical, 12)
             .background(Theme.red)
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.outline, lineWidth: 4))
-            .hardShadow(Theme.outline, x: 5, y: 5)
+            .hardShadow(Theme.outline, x: 5, y: 5, radius: 10)
         }
     }
 }
@@ -342,6 +367,7 @@ struct Stage16x9<Content: View>: View {
                 .frame(width: 1920 * scale, height: 1080 * scale)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.grey)
     }
 }
