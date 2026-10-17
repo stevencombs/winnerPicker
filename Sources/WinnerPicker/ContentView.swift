@@ -31,8 +31,8 @@ struct ContentView: View {
         .frame(minWidth: 1100, minHeight: 680)
         .animation(.easeInOut(duration: 0.28), value: model.screen)
         .onAppear {
-            KeyBridge.shared.handle = { @MainActor event in
-                model.consumeKey(event)
+            KeyBridge.shared.handle = { @MainActor stroke in
+                model.consumeKey(stroke)
             }
         }
         .alert("Add some names first", isPresented: $model.showEmptyAlert) {

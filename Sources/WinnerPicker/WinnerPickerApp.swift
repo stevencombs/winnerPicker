@@ -34,10 +34,20 @@ struct WinnerPickerApp: App {
     }
 }
 
+/// Sendable snapshot of a key down. `NSEvent` is not `Sendable`, and
+/// `MainActor.assumeIsolated` can only return a `Sendable` value.
+struct KeyStroke: Sendable {
+    var characters: String
+    var keyCode: UInt16
+    var modifierFlags: UInt
+    var isRepeat: Bool
+}
+
 @MainActor
 final class KeyBridge {
     static let shared = KeyBridge()
-    var handle: (@MainActor (NSEvent) -> NSEvent?)?
+    /// `true` swallows the event.
+    var handle: (@MainActor (KeyStroke) -> Bool)?
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -45,9 +55,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.regular)
         NSApp.activate()
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            MainActor.assumeIsolated {
-                KeyBridge.shared.handle?(event) ?? event
+            let stroke = KeyStroke(
+                characters: event.charactersIgnoringModifiers ?? "",
+                keyCode: event.keyCode,
+                modifierFlags: event.modifierFlags.rawValue,
+                isRepeat: event.isARepeat
+            )
+            let swallow = MainActor.assumeIsolated { () -> Bool in
+                KeyBridge.shared.handle?(stroke) ?? false
             }
+            return swallow ? nil : event
         }
     }
 

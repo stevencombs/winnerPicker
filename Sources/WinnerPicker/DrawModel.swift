@@ -160,52 +160,54 @@ final class DrawModel {
         screen = .winner
     }
 
-    func consumeKey(_ event: NSEvent) -> NSEvent? {
-        let mods = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+    /// `true` means the key was handled and the event monitor should swallow it.
+    func consumeKey(_ stroke: KeyStroke) -> Bool {
+        let mods = NSEvent.ModifierFlags(rawValue: stroke.modifierFlags)
+            .intersection(.deviceIndependentFlagsMask)
         if mods.contains(.command) || mods.contains(.control) || mods.contains(.option) {
-            return event
+            return false
         }
 
-        let chars = (event.charactersIgnoringModifiers ?? "").lowercased()
-        let keyCode = event.keyCode
+        let chars = stroke.characters.lowercased()
+        let keyCode = stroke.keyCode
         let isSpace = chars == " " || keyCode == 49
         let isEscape = keyCode == 53
 
         if screen == .setup {
-            if chars == "f", !event.isARepeat {
+            if chars == "f", !stroke.isRepeat {
                 WindowControls.toggleFullScreen()
-                return nil
+                return true
             }
-            return event
+            return false
         }
 
         let handled = isSpace || chars == "r" || chars == "n" || chars == "f" || isEscape
-        if event.isARepeat {
-            return handled ? nil : event
+        if stroke.isRepeat {
+            return handled
         }
 
         if isSpace {
             space()
-            return nil
+            return true
         }
         switch chars {
         case "r":
             redraw()
-            return nil
+            return true
         case "n":
             newList()
-            return nil
+            return true
         case "f":
             WindowControls.toggleFullScreen()
-            return nil
+            return true
         default:
             break
         }
         if isEscape {
             newList()
-            return nil
+            return true
         }
-        return event
+        return false
     }
 
     private func drawAgain() {
