@@ -4,13 +4,13 @@
   <img src="Resources/AppIcon-1024.png" width="160" alt="retroCombs winnerPicker icon">
 </p>
 
-A native macOS app that picks one winner from a typed or pasted list of names. Built for livestreams and giveaways: large type, a five-second shuffle with drumroll, then a fanfare page with confetti.
+A native macOS app for drawing retroCombs members-only giveaway winners on a Sunday livestream. Setup stays off air. Go Live switches to a 16:9 screen: logo, prize, name shuffle, entrant chips, and a YouTube membership QR code. Each winner gets the drumroll and fanfare, then pixel fireworks and a claim countdown.
 
 ## Requirements
 
 - macOS 14 or later
 - Xcode Command Line Tools (`xcode-select --install`), which provide `swift`, or a Swift toolchain on `PATH`
-- `zsh`, `codesign`, and `ditto`, which ship with macOS
+- `zsh`, `codesign`, and `ditto`, which ship with macOS. `sips` and `iconutil` pack the app icon during the build.
 
 ## Build and install
 
@@ -32,7 +32,7 @@ zsh /path/to/winnerPicker/Scripts/build-app.sh --install
 
 Calling it through `zsh` matters: the scripts are `100755` in git, but a sync can leave them `100644`, and `zsh` does not need the executable bit.
 
-The installed app is the binary, icon, and sounds inside the bundle. It does not read this checkout. Quit retroCombs winnerPicker before installing again so the copy already in Applications can be replaced.
+The installed app is the binary plus the icon, fonts, artwork, and sounds inside the bundle. It does not read this checkout. Quit retroCombs winnerPicker before installing again so the copy already in Applications can be replaced.
 
 To build without installing, omit the flag. The bundle is written to `dist/retroCombs winnerPicker.app`. The script exits with an error if `codesign --verify --deep --strict` fails.
 
@@ -70,37 +70,54 @@ That setting stays on this machine. Keep running the build as `zsh Scripts/build
 
 ## How to use it
 
-1. Type or paste names into the text box. Separate them with commas. Newlines work too, so a pasted column of names is fine.
-2. Click **Winner**, or press Return.
-3. Watch a five-second shuffle while a drumroll plays. That pause is long enough for color commentary.
-4. The fanfare page reveals the winner with confetti and a brass sting.
-5. Use **Pick Again** for another draw from the same list, or **New Drawing** to edit the names.
+1. Paste entrant names from the members-only sign-up. Commas and new lines both work. The count updates as you type.
+2. Pick how many winners (1–10), name each prize or use the same prize for all, and set the claim timer. It starts at 2:00.
+3. Click **Go Live**. The name editor leaves the screen.
+4. Press Space to draw. A five-second shuffle plays with the drumroll, holds on **AND THE WINNER IS**, then reveals the name with the fanfare and pixel fireworks.
+5. The winner has that long to claim in chat. **Draw Again** if they are a no-show. **Next Prize** draws the next winner. After the last one, the recap lists everyone.
 
-Empty entries and extra commas are ignored.
+Each person can win once. A redraw also removes the no-show from the rest of the session.
+
+### Keys
+
+| Key | Action |
+| --- | --- |
+| Space | Draw, or go to the next prize |
+| R | Redraw the current prize |
+| N | New list (back to setup) |
+| F | Full screen |
+| Esc | Back to setup |
 
 ### Example
 
 ```text
-Ada Lovelace, Grace Hopper, Alan Turing, Katherine Johnson, Margaret Hamilton
+PixelPete64, SIDChipSally, ByteBandit
+FloppyMcDisk
+DatasetteDan
 ```
 
 ## What a draw does
 
-1. Splits the list on commas and newlines, then trims whitespace
-2. Shuffles every name
-3. Cycles through the shuffled names for five seconds, starting fast and slowing down
-4. Pauses on **AND THE WINNER IS**
-5. Reveals one winner, plays the fanfare, and starts confetti
+1. Splits the list on commas and newlines, trims whitespace, and drops empty or duplicate names
+2. Removes anyone who already won, and anyone who was redrawn as a no-show
+3. Shuffles the people still in the pool
+4. Cycles through those names for five seconds, starting fast and slowing down, while the drumroll plays
+5. Pauses on **AND THE WINNER IS**
+6. Reveals the winner, plays the fanfare, and starts the claim countdown
 
 ## Project layout
 
 ```text
 Package.swift                 Swift package manifest
 Sources/WinnerPicker/         SwiftUI app source
-Resources/                    App icon, Info.plist, drumroll, and fanfare audio
-Scripts/build-app.sh          Release build, ad-hoc sign, and install
+Resources/                    Icon, fonts, badges, logo, Info.plist, drumroll, and fanfare
+Scripts/build-app.sh          Release build, icon pack, ad-hoc sign, and install
 Scripts/generate_sounds.py    Regenerates the bundled WAV files
 ```
+
+The app icon is the joystick logo on a beige rounded tile with a dark outline and an orange, yellow, green, and blue edge. `Resources/AppIcon-1024.png` is the master. On a Mac the build packs every size from 16 through 1024 with `sips` and `iconutil`, then copies `AppIcon-16.png` and `AppIcon-32.png` over the two smallest outputs so the stick and the red buttons stay solid. `Resources/AppIcon.icns` is the committed icon, including those sizes, for machines that build without `sips`. `CFBundleIconFile` is `AppIcon`.
+
+Press Start 2P and VT323 are OFL fonts in `Resources/`. See `Resources/Fonts-OFL.txt`. The app registers them at launch with `CTFontManagerRegisterFontsForURL`.
 
 To rebuild the drumroll and fanfare sounds:
 
@@ -112,3 +129,4 @@ zsh Scripts/build-app.sh --install
 ## License
 
 MIT License — see [LICENSE](LICENSE).
+The bundled fonts stay under the SIL Open Font License.

@@ -1,27 +1,54 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var model = DrawModel()
+    @Bindable var model: DrawModel
 
     var body: some View {
         ZStack {
-            Theme.background.ignoresSafeArea()
-
+            Theme.grey.ignoresSafeArea()
             switch model.screen {
-            case .entry:
-                EntryView(model: model)
-                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
-            case .fanfare:
-                FanfareView(model: model)
-                    .transition(.opacity.combined(with: .scale(scale: 1.03)))
+            case .setup:
+                SetupView(model: model)
+                    .transition(.opacity)
+            case .drawing:
+                Stage16x9 {
+                    DrawStreamView(model: model)
+                }
+                .transition(.opacity)
+            case .winner:
+                Stage16x9 {
+                    WinnerStreamView(model: model)
+                        .id(model.revealID)
+                }
+                .transition(.opacity)
+            case .recap:
+                Stage16x9 {
+                    RecapStreamView(model: model)
+                }
+                .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.45), value: model.screen)
-        .frame(minWidth: 760, minHeight: 560)
+        .frame(minWidth: 1100, minHeight: 680)
+        .animation(.easeInOut(duration: 0.28), value: model.screen)
+        .onAppear {
+            KeyBridge.shared.handle = { @MainActor event in
+                model.consumeKey(event)
+            }
+        }
         .alert("Add some names first", isPresented: $model.showEmptyAlert) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Paste a list of names separated by commas, then click Winner.")
+            Text("Paste entrant names separated by commas or new lines, then go live.")
+        }
+        .alert("Not enough entrants", isPresented: $model.showCountAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("This giveaway needs \(model.winnerCount) winners, and the list has \(model.names.count).")
+        }
+        .alert("No one left to draw", isPresented: $model.showPoolAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Everyone else has already won or been skipped. Start a new list to add more names.")
         }
     }
 }
