@@ -1,5 +1,7 @@
+# Local build output. Install the .app outside the checkout.
 .build/
 dist/
+*.app
 *.xcodeproj
 .swiftpm/
 .DS_Store
