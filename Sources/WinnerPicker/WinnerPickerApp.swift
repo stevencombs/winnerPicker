@@ -62,9 +62,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 isRepeat: event.isARepeat
             )
             let swallow = MainActor.assumeIsolated { () -> Bool in
-                KeyBridge.shared.handle?(stroke) ?? false
+                // A field editor is typing. Do not treat the key as a hotkey.
+                // Esc ends editing here and is still delivered, so it does not
+                // return to setup.
+                if WindowControls.textInputIsFirstResponder() {
+                    if stroke.keyCode == 53 {
+                        WindowControls.endTextEditing()
+                    }
+                    return false
+                }
+                return KeyBridge.shared.handle?(stroke) ?? false
             }
             return swallow ? nil : event
+        }
+        // mouseUp so a click can finish (Go Live, winner count) before focus drops.
+        NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { event in
+            let windowNumber = event.windowNumber
+            let x = event.locationInWindow.x
+            let y = event.locationInWindow.y
+            let shouldEndEditing = MainActor.assumeIsolated { () -> Bool in
+                guard WindowControls.textInputIsFirstResponder() else { return false }
+                return !WindowControls.hitIsTextInput(windowNumber: windowNumber, x: x, y: y)
+            }
+            if shouldEndEditing {
+                Task { @MainActor in
+                    WindowControls.endTextEditing(windowNumber: windowNumber)
+                }
+            }
+            return event
         }
     }
 

@@ -71,6 +71,7 @@ final class DrawModel {
     }
 
     func goLive() {
+        WindowControls.endTextEditing()
         let parsed = names
         guard !parsed.isEmpty else {
             showEmptyAlert = true
@@ -162,6 +163,11 @@ final class DrawModel {
 
     /// `true` means the key was handled and the event monitor should swallow it.
     func consumeKey(_ stroke: KeyStroke) -> Bool {
+        // Typing in setup (or any field editor) must receive the key unchanged.
+        if WindowControls.textInputIsFirstResponder() {
+            return false
+        }
+
         let mods = NSEvent.ModifierFlags(rawValue: stroke.modifierFlags)
             .intersection(.deviceIndependentFlagsMask)
         if mods.contains(.command) || mods.contains(.control) || mods.contains(.option) {
@@ -173,6 +179,8 @@ final class DrawModel {
         let isSpace = chars == " " || keyCode == 49
         let isEscape = keyCode == 53
 
+        // Setup: F toggles full screen only when nothing is being edited.
+        // Space, R, N, and Esc are live-screen controls.
         if screen == .setup {
             if chars == "f", !stroke.isRepeat {
                 WindowControls.toggleFullScreen()

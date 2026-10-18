@@ -415,9 +415,65 @@ struct Stage16x9<Content: View>: View {
 }
 
 enum WindowControls {
+    static let endTextEditingNotification = Notification.Name("winnerPickerEndTextEditing")
+
     @MainActor
     static func toggleFullScreen() {
         let window = NSApp.keyWindow ?? NSApp.mainWindow ?? NSApp.windows.first
         window?.toggleFullScreen(nil)
+    }
+
+    /// Drops the field editor so live-screen hotkeys work.
+    @MainActor
+    static func resignKeyFocus(windowNumber: Int? = nil) {
+        let window: NSWindow?
+        if let windowNumber {
+            window = NSApp.window(withWindowNumber: windowNumber)
+        } else {
+            window = NSApp.keyWindow ?? NSApp.mainWindow
+        }
+        window?.makeFirstResponder(nil)
+    }
+
+    /// Resigns the field editor and tells setup to clear `FocusState`.
+    @MainActor
+    static func endTextEditing(windowNumber: Int? = nil) {
+        resignKeyFocus(windowNumber: windowNumber)
+        NotificationCenter.default.post(name: endTextEditingNotification, object: nil)
+    }
+
+    /// Field editor (`NSTextView` / `NSText`) or the text field itself.
+    @MainActor
+    static func textInputIsFirstResponder() -> Bool {
+        let window = NSApp.keyWindow ?? NSApp.mainWindow
+        return responderIsTextInput(window?.firstResponder)
+    }
+
+    @MainActor
+    static func hitIsTextInput(windowNumber: Int, x: CGFloat, y: CGFloat) -> Bool {
+        guard let window = NSApp.window(withWindowNumber: windowNumber) else { return false }
+        return viewChainIsTextInput(window.contentView?.hitTest(CGPoint(x: x, y: y)))
+    }
+
+    @MainActor
+    private static func responderIsTextInput(_ responder: NSResponder?) -> Bool {
+        guard let responder else { return false }
+        if responder is NSText || responder is NSTextField || responder is NSStepper {
+            return true
+        }
+        return responder.conforms(to: NSTextInputClient.self)
+    }
+
+    @MainActor
+    private static func viewChainIsTextInput(_ view: NSView?) -> Bool {
+        var current: NSView? = view
+        while let item = current {
+            if responderIsTextInput(item) { return true }
+            if let scroll = item as? NSScrollView, responderIsTextInput(scroll.documentView) {
+                return true
+            }
+            current = item.superview
+        }
+        return false
     }
 }

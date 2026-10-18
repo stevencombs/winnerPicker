@@ -31,6 +31,10 @@ struct ContentView: View {
         .frame(minWidth: 1100, minHeight: 680)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut(duration: 0.28), value: model.screen)
+        .onChange(of: model.screen) { previous, screen in
+            guard previous == .setup, screen != .setup else { return }
+            WindowControls.endTextEditing()
+        }
         .onAppear {
             KeyBridge.shared.handle = { @MainActor stroke in
                 model.consumeKey(stroke)

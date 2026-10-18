@@ -7,9 +7,15 @@ private struct SetupHeightKey: PreferenceKey {
     }
 }
 
+private enum SetupField: Hashable {
+    case names
+    case sharedPrize
+    case prize(Int)
+}
+
 struct SetupView: View {
     @Bindable var model: DrawModel
-    @FocusState private var editorFocused: Bool
+    @FocusState private var focusedField: SetupField?
     @State private var contentHeight: CGFloat = 820
 
     private let columnWidth: CGFloat = 1180
@@ -28,6 +34,7 @@ struct SetupView: View {
                         GeometryReader { proxy in
                             Color.clear.preference(key: SetupHeightKey.self, value: proxy.size.height)
                         }
+                        .allowsHitTesting(false)
                     }
                     .scaleEffect(scale, anchor: .center)
                     .frame(width: columnWidth * scale, height: contentHeight * scale)
@@ -37,7 +44,16 @@ struct SetupView: View {
             guard height > 1, abs(height - contentHeight) > 0.5 else { return }
             contentHeight = height
         }
-        .onAppear { editorFocused = true }
+        .onAppear { focusedField = .names }
+        .onDisappear { WindowControls.resignKeyFocus() }
+        .onReceive(NotificationCenter.default.publisher(for: WindowControls.endTextEditingNotification)) { _ in
+            focusedField = nil
+        }
+    }
+
+    private func releaseTyping() {
+        focusedField = nil
+        WindowControls.endTextEditing()
     }
 
     private var column: some View {
@@ -81,6 +97,8 @@ struct SetupView: View {
             }
             Spacer()
         }
+        .contentShape(Rectangle())
+        .onTapGesture { releaseTyping() }
     }
 
     private var namesBlock: some View {
@@ -100,7 +118,7 @@ struct SetupView: View {
                     .font(Theme.mono(30))
                     .foregroundStyle(Theme.ink)
                     .scrollContentBackground(.hidden)
-                    .focused($editorFocused)
+                    .focused($focusedField, equals: .names)
                     .padding(8)
             }
             .frame(height: 148)
@@ -166,7 +184,7 @@ struct SetupView: View {
                     }
             }
             if model.samePrizeForAll {
-                prizeField(text: $model.sharedPrize, prompt: "Mystery Retro Box")
+                prizeField(text: $model.sharedPrize, prompt: "Mystery Retro Box", field: .sharedPrize)
             } else {
                 ForEach(0..<model.winnerCount, id: \.self) { index in
                     HStack(spacing: 8) {
@@ -174,14 +192,18 @@ struct SetupView: View {
                             .font(Theme.press(12))
                             .foregroundStyle(Theme.red)
                             .frame(width: 28)
-                        prizeField(text: $model.individualPrizes[index], prompt: "Prize \(index + 1)")
+                        prizeField(
+                            text: $model.individualPrizes[index],
+                            prompt: "Prize \(index + 1)",
+                            field: .prize(index)
+                        )
                     }
                 }
             }
         }
     }
 
-    private func prizeField(text: Binding<String>, prompt: String) -> some View {
+    private func prizeField(text: Binding<String>, prompt: String, field: SetupField) -> some View {
         ZStack(alignment: .leading) {
             if text.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 Text(prompt)
@@ -193,6 +215,7 @@ struct SetupView: View {
                 .textFieldStyle(.plain)
                 .font(Theme.mono(30))
                 .foregroundStyle(Theme.ink)
+                .focused($focusedField, equals: field)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
@@ -241,7 +264,10 @@ struct SetupView: View {
                     fill: Theme.red,
                     foreground: .white,
                     fontSize: 18,
-                    action: model.goLive
+                    action: {
+                        releaseTyping()
+                        model.goLive()
+                    }
                 )
                 .disabled(!canGoLive)
                 .opacity(canGoLive ? 1 : 0.45)
