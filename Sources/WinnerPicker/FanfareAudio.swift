@@ -6,47 +6,51 @@ final class FanfareAudio {
     static let shared = FanfareAudio()
 
     private var player: AVAudioPlayer?
+    private var clip: Clip?
+
+    private enum Clip {
+        case drumroll
+        case fanfare
+    }
 
     func playDrumroll() {
-        play(resource: "drumroll")
+        play(resource: "drumroll", clip: .drumroll)
     }
 
     func playFanfare() {
-        play(resource: "fanfare")
+        play(resource: "fanfare", clip: .fanfare)
+    }
+
+    /// Stops one clip without cutting the other if a screen change overlaps them.
+    func stopDrumroll() {
+        guard clip == .drumroll else { return }
+        stop()
+    }
+
+    func stopFanfare() {
+        guard clip == .fanfare else { return }
+        stop()
     }
 
     func stop() {
         player?.stop()
         player = nil
+        clip = nil
     }
 
-    private func play(resource: String) {
+    private func play(resource: String, clip: Clip) {
         stop()
-        guard let url = Self.url(for: resource) else { return }
+        guard let url = BrandAssets.url(named: resource, ext: "wav") else { return }
         do {
             let next = try AVAudioPlayer(contentsOf: url)
-            next.volume = 1.0
+            next.volume = 1
             next.prepareToPlay()
             next.play()
             player = next
+            self.clip = clip
         } catch {
             player = nil
-        }
-    }
-
-    private static func url(for name: String) -> URL? {
-        let candidates: [URL?] = [
-            Bundle.main.url(forResource: name, withExtension: "wav"),
-            Bundle.main.resourceURL?.appendingPathComponent("\(name).wav"),
-            Bundle.main.bundleURL.appendingPathComponent("\(name).wav"),
-            Bundle.main.bundleURL
-                .deletingLastPathComponent()
-                .deletingLastPathComponent()
-                .appendingPathComponent("Resources/\(name).wav")
-        ]
-
-        return candidates.compactMap { $0 }.first {
-            FileManager.default.fileExists(atPath: $0.path)
+            self.clip = nil
         }
     }
 }
