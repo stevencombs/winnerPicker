@@ -158,9 +158,7 @@ struct DrawStreamView: View {
                     .lineLimit(1)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 1)
-                    .background(Theme.cream)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.outline, lineWidth: 3))
-                    .hardShadow(Theme.outline, x: 3, y: 3, radius: 8)
+                    .roundedPlate(fill: Theme.cream, radius: 8, lineWidth: 3, shadowX: 3, shadowY: 3)
             }
             if pool.count > shown.count {
                 Text("+\(pool.count - shown.count) MORE")
@@ -168,8 +166,10 @@ struct DrawStreamView: View {
                     .foregroundStyle(Theme.yellow)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 1)
-                    .background(Theme.outline)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.outline, lineWidth: 3))
+                    .background {
+                        RoundedRectangle(cornerRadius: 8).fill(Theme.outline)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -192,9 +192,7 @@ struct DrawStreamView: View {
                 .foregroundStyle(Theme.outline)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 4)
-                .background(Theme.cream)
-                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.outline, lineWidth: 3))
-                .hardShadow(Theme.outline, x: 2, y: 2, radius: 4)
+                .roundedPlate(fill: Theme.cream, radius: 4, lineWidth: 3, shadowX: 2, shadowY: 2)
             Text(label)
                 .font(Theme.mono(26))
                 .foregroundStyle(Theme.muted)
@@ -236,7 +234,7 @@ struct DrawStreamView: View {
         HStack(spacing: 12) {
             BundledImage(name: "logo-retrocombs")
                 .frame(width: 64, height: 64)
-                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.outline, lineWidth: 3))
             VStack(alignment: .leading, spacing: 6) {
                 Text("SUBSCRIBE")
@@ -253,9 +251,7 @@ struct DrawStreamView: View {
             Spacer(minLength: 0)
         }
         .padding(10)
-        .background(Theme.cream)
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.outline, lineWidth: 4))
-        .hardShadow(Theme.outline, x: 4, y: 4, radius: 14)
+        .roundedPlate(fill: Theme.cream, radius: 14, lineWidth: 4, shadowX: 4, shadowY: 4)
     }
 
     private func consumeShuffle() {
@@ -321,24 +317,10 @@ struct WinnerStreamView: View {
         BroadcastChrome(
             tickerLead: "CONGRATS!",
             tickerItems: winnerTicker,
-            fireworks: .celebrate
-        ) {
-            VStack(spacing: 16) {
-                HStack(alignment: .top, spacing: 18) {
-                    winnersCard
-                        .frame(width: 300)
-                    winnerPanel
-                    membershipCard
-                        .frame(width: 280)
-                }
-                .frame(maxHeight: .infinity)
-                HStack(spacing: 18) {
-                    PixelButton(title: "◄  NEW LIST", fill: Theme.cream, action: model.newList)
-                    PixelButton(title: "DRAW AGAIN", fill: Theme.orange, action: model.redraw)
-                    PixelButton(title: "NEXT PRIZE  ►", fill: Theme.green, action: model.advance)
-                }
-            }
-        }
+            fireworks: .celebrate,
+            under: { sideColumns },
+            over: { centerColumn }
+        )
         .onAppear {
             started = Date()
             FanfareAudio.shared.playFanfare()
@@ -414,9 +396,13 @@ struct WinnerStreamView: View {
                     .foregroundStyle(expired ? Theme.ink : Color.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .background(expired ? Theme.yellow : Theme.red)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.outline, lineWidth: 4))
-                    .hardShadow(Theme.outline, x: 4, y: 4, radius: 8)
+                    .roundedPlate(
+                        fill: expired ? Theme.yellow : Theme.red,
+                        radius: 8,
+                        lineWidth: 4,
+                        shadowX: 4,
+                        shadowY: 4
+                    )
             }
         }
     }
@@ -434,9 +420,7 @@ struct WinnerStreamView: View {
         }
         .padding(14)
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(Theme.cream)
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.outline, lineWidth: 5))
-        .hardShadow(Theme.outline, x: 7, y: 7, radius: 18)
+        .roundedPlate(fill: Theme.cream, radius: 18, lineWidth: 5, shadowX: 7, shadowY: 7)
     }
 
     private func winnerRow(_ index: Int) -> some View {
@@ -485,9 +469,50 @@ struct WinnerStreamView: View {
         }
         .padding(14)
         .frame(maxHeight: .infinity)
-        .background(Theme.cream)
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.outline, lineWidth: 5))
-        .hardShadow(Theme.outline, x: 7, y: 7, radius: 18)
+        .roundedPlate(fill: Theme.cream, radius: 18, lineWidth: 5, shadowX: 7, shadowY: 7)
+    }
+
+    /// Left and right cards, under the fireworks. The hidden controls keep the columns the same height as the live row.
+    private var sideColumns: some View {
+        VStack(spacing: 16) {
+            HStack(alignment: .top, spacing: 18) {
+                winnersCard
+                    .frame(width: 300)
+                Color.clear
+                membershipCard
+                    .frame(width: 280)
+            }
+            .frame(maxHeight: .infinity)
+            controls
+                .hidden()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    /// Winner card and buttons stay above the fireworks so the name stays readable.
+    private var centerColumn: some View {
+        VStack(spacing: 16) {
+            HStack(alignment: .top, spacing: 18) {
+                Color.clear
+                    .frame(width: 300)
+                    .allowsHitTesting(false)
+                winnerPanel
+                Color.clear
+                    .frame(width: 280)
+                    .allowsHitTesting(false)
+            }
+            .frame(maxHeight: .infinity)
+            controls
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    private var controls: some View {
+        HStack(spacing: 18) {
+            PixelButton(title: "◄  NEW LIST", fill: Theme.cream, action: model.newList)
+            PixelButton(title: "DRAW AGAIN", fill: Theme.orange, action: model.redraw)
+            PixelButton(title: "NEXT PRIZE  ►", fill: Theme.green, action: model.advance)
+        }
     }
 }
 
@@ -502,36 +527,42 @@ struct RecapStreamView: View {
         BroadcastChrome(
             tickerLead: "TODAY'S WINNERS",
             tickerItems: winnerTicker,
-            fireworks: .finale
-        ) {
-            VStack(spacing: 18) {
-                RainbowPanel(padding: 32, fillsHeight: true) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Every winner from this stream")
-                            .font(Theme.mono(32))
-                            .foregroundStyle(Theme.muted)
-                        LazyVGrid(
-                            columns: Array(repeating: GridItem(.flexible(), alignment: .leading), count: columns),
-                            alignment: .leading,
-                            spacing: 14
-                        ) {
-                            ForEach(0..<model.prizes.count, id: \.self) { index in
-                                recapRow(index)
-                            }
-                        }
-                        Spacer(minLength: 0)
-                    }
-                }
-                .overlay(alignment: .topLeading) {
-                    TabLabel(text: "▶  TODAY'S WINNERS")
-                        .padding(.leading, 36)
-                        .offset(y: -18)
-                }
-                .frame(maxWidth: 1280)
-                PixelButton(title: "◄  NEW LIST", fill: Theme.cream, fontSize: 16, action: model.newList)
+            fireworks: .finale,
+            under: { EmptyView() },
+            over: {
+                recapColumn
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        )
+    }
+
+    private var recapColumn: some View {
+        VStack(spacing: 18) {
+            RainbowPanel(padding: 32, fillsHeight: true) {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Every winner from this stream")
+                        .font(Theme.mono(32))
+                        .foregroundStyle(Theme.muted)
+                    LazyVGrid(
+                        columns: Array(repeating: GridItem(.flexible(), alignment: .leading), count: columns),
+                        alignment: .leading,
+                        spacing: 14
+                    ) {
+                        ForEach(0..<model.prizes.count, id: \.self) { index in
+                            recapRow(index)
+                        }
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
+            .overlay(alignment: .topLeading) {
+                TabLabel(text: "▶  TODAY'S WINNERS")
+                    .padding(.leading, 36)
+                    .offset(y: -18)
+            }
+            .frame(maxWidth: 1280)
+            PixelButton(title: "◄  NEW LIST", fill: Theme.cream, fontSize: 16, action: model.newList)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func recapRow(_ index: Int) -> some View {

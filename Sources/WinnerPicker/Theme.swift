@@ -53,6 +53,34 @@ extension View {
                 .allowsHitTesting(false)
         }
     }
+
+    /// Rounded fill, stroke, and hard shadow share one corner radius so a
+    /// square background cannot show outside the curve.
+    func roundedPlate(
+        fill: Color,
+        radius: CGFloat,
+        lineWidth: CGFloat,
+        shadowX: CGFloat,
+        shadowY: CGFloat,
+        shadow: Color = Theme.outline
+    ) -> some View {
+        self
+            .background {
+                RoundedRectangle(cornerRadius: radius)
+                    .fill(fill)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: radius))
+            .overlay {
+                RoundedRectangle(cornerRadius: radius)
+                    .stroke(Theme.outline, lineWidth: lineWidth)
+            }
+            .background {
+                RoundedRectangle(cornerRadius: radius)
+                    .fill(shadow)
+                    .offset(x: shadowX, y: shadowY)
+                    .allowsHitTesting(false)
+            }
+    }
 }
 
 struct StripeBackground: View {
@@ -145,12 +173,13 @@ struct PixelButton: View {
                 .minimumScaleFactor(0.7)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
-                .background(fill)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(Theme.outline, lineWidth: 4)
+                .roundedPlate(
+                    fill: fill,
+                    radius: 14,
+                    lineWidth: 4,
+                    shadowX: 5,
+                    shadowY: 5
                 )
-                .hardShadow(Theme.outline, x: 5, y: 5, radius: 14)
         }
         .buttonStyle(.plain)
     }
@@ -191,7 +220,11 @@ struct RuleLine: View {
             .minimumScaleFactor(0.55)
             .padding(.horizontal, 12)
             .padding(.vertical, 2)
-            .background(Theme.note)
+            .background {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Theme.note)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 2))
             .overlay(
                 RoundedRectangle(cornerRadius: 2)
                     .stroke(Theme.outline, style: StrokeStyle(lineWidth: 3, dash: [8, 5]))
@@ -250,9 +283,13 @@ struct LiveBadge: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .background(Theme.red)
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.outline, lineWidth: 4))
-            .hardShadow(Theme.outline, x: 5, y: 5, radius: 10)
+            .roundedPlate(
+                fill: Theme.red,
+                radius: 10,
+                lineWidth: 4,
+                shadowX: 5,
+                shadowY: 5
+            )
         }
     }
 }
@@ -297,36 +334,66 @@ enum FireworkLevel {
     case finale
 }
 
-struct BroadcastChrome<Content: View>: View {
+struct BroadcastChrome<Under: View, Over: View>: View {
     var tickerLead: String
     var tickerItems: [String]
     var fireworks: FireworkLevel = .off
-    @ViewBuilder var content: () -> Content
+    /// Drawn under the fireworks: stripes, then this layer, then bursts.
+    @ViewBuilder var under: () -> Under
+    /// Drawn over the fireworks. The winner card lives here so bursts never cover it.
+    @ViewBuilder var over: () -> Over
 
     var body: some View {
         ZStack {
             StripeBackground()
-            switch fireworks {
-            case .off:
-                EmptyView()
-            case .celebrate:
-                PixelFireworksView(finale: false)
-            case .finale:
-                PixelFireworksView(finale: true)
-            }
             VStack(spacing: 0) {
                 StreamHeader()
                     .padding(.horizontal, 64)
                     .padding(.top, 26)
-                content()
-                    .padding(.horizontal, 56)
-                    .padding(.top, 34)
-                    .padding(.bottom, 14)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ZStack {
+                    under()
+                    fireworkLayer
+                    over()
+                }
+                .padding(.horizontal, 56)
+                .padding(.top, 34)
+                .padding(.bottom, 14)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 StreamTicker(lead: tickerLead, items: tickerItems)
             }
         }
         .frame(width: 1920, height: 1080)
+    }
+
+    @ViewBuilder
+    private var fireworkLayer: some View {
+        switch fireworks {
+        case .off:
+            EmptyView()
+        case .celebrate:
+            PixelFireworksView(finale: false)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .allowsHitTesting(false)
+        case .finale:
+            PixelFireworksView(finale: true)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .allowsHitTesting(false)
+        }
+    }
+}
+
+extension BroadcastChrome where Over == EmptyView {
+    init(
+        tickerLead: String,
+        tickerItems: [String],
+        fireworks: FireworkLevel = .off,
+        @ViewBuilder under: @escaping () -> Under
+    ) {
+        self.tickerLead = tickerLead
+        self.tickerItems = tickerItems
+        self.fireworks = fireworks
+        self.under = under
+        self.over = { EmptyView() }
     }
 }
 

@@ -141,7 +141,10 @@ struct MembershipQR: View {
             .resizable()
             .frame(width: side, height: side)
             .padding(8)
-            .background(Theme.cream)
+            .background {
+                RoundedRectangle(cornerRadius: 12).fill(Theme.cream)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(Theme.outline, lineWidth: max(3, side / 50))

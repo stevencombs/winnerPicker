@@ -92,7 +92,7 @@ struct SetupView: View {
                 if model.rawInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Text("PixelPete64, SIDChipSally, ByteBandit")
                         .font(Theme.mono(30))
-                        .foregroundStyle(Theme.muted.opacity(0.7))
+                        .foregroundStyle(Theme.muted)
                         .padding(14)
                         .allowsHitTesting(false)
                 }
@@ -182,14 +182,22 @@ struct SetupView: View {
     }
 
     private func prizeField(text: Binding<String>, prompt: String) -> some View {
-        TextField("", text: text, prompt: Text(prompt))
-            .textFieldStyle(.plain)
-            .font(Theme.mono(30))
-            .foregroundStyle(Theme.ink)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(Theme.cream)
-            .overlay(Rectangle().stroke(Theme.outline, lineWidth: 3))
+        ZStack(alignment: .leading) {
+            if text.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Text(prompt)
+                    .font(Theme.mono(30))
+                    .foregroundStyle(Theme.muted)
+                    .allowsHitTesting(false)
+            }
+            TextField("", text: text)
+                .textFieldStyle(.plain)
+                .font(Theme.mono(30))
+                .foregroundStyle(Theme.ink)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Theme.cream)
+        .overlay(Rectangle().stroke(Theme.outline, lineWidth: 3))
     }
 
     private var timerBlock: some View {
